@@ -1,0 +1,73 @@
+Generating Let's Encrypt SSL Certificate:
+	sudo yum install git
+	sudo git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
+	
+	cd /opt/letsencrypt
+	certbot -d grw-srv-master.duckdns.org --manual --preferred-challenges dns certonly
+	
+	https://www.duckdns.org/update?domains=grw-srv-master&token=1f95e81d-d758-4fe0-bccd-9e6ef1908b32&txt=AUTH_KEY_FROM_CMD
+	=> OK
+	
+	ENTER
+
+lrwxrwxrwx 1 root root   50 Jul  5 11:53 cert.pem ../../archive/grw-srv-master.duckdns.org/cert1.pem
+lrwxrwxrwx 1 root root   51 Jul  5 11:53 chain.pem -> ../../archive/grw-srv-master.duckdns.org/chain1.pem
+lrwxrwxrwx 1 root root   55 Jul  5 11:53 fullchain.pem -> ../../archive/grw-srv-master.duckdns.org/fullchain1.pem
+lrwxrwxrwx 1 root root   53 Jul  5 11:53 privkey.pem -> ../../archive/grw-srv-master.duckdns.org/privkey1.pem
+	
+	cp /etc/letsencrypt/live/grw-srv-master.duckdns.org/fullchain.pem ~gwuser/gw8/
+	cp /etc/letsencrypt/live/grw-srv-master.duckdns.org/privkey.pem ~gwuser/gw8/
+	
+Adding certificates
+	su - gwos
+	cd gw8
+	TAG=$(grep '^TAG=' .env | sed 's/^TAG=//')
+	docker run --rm -t \
+		-v ${PWD}:/mnt \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		--name gw8 groundworkdevelopment/gw8:${TAG} \
+		/src/docker_cmd.sh loadCertificates grw-srv-master.duckdns.org \
+		privkey.pem fullchain.pem
+	
+	docker-compose exec revproxy bash -e -c "nginx -t; /etc/init.d/nginx reload"
+	
+Install gdma client
+cat /usr/local/groundwork/gdma/log/gwmon_nginx-loadbalancer_poller.log
+==========================================================================================
+[Fri Jul 08 18:52:39 2022] The GDMA Poller is starting up!
+                           GDMA version 2.7.1
+==========================================================================================
+[Fri Jul 08 18:52:39 2022] NOTICE:  Failed to get config file
+                           https://grw-srv-master.duckdns.org/gdma/gwmon_nginx-loadbalancer.localnet.com.cfg -- 404 Not Found
+[Fri Jul 08 18:52:39 2022] NOTICE:  Failed to get config file
+                           https://grw-srv-master.duckdns.org/gdma/gwmon_nginx-loadbalancer.cfg -- 404 Not Found
+[Fri Jul 08 18:52:39 2022] ERROR:  Failed to fetch the host config file.
+[Fri Jul 08 18:52:42 2022] NOTICE:  Auto-registration request was processed.
+[Fri Jul 08 18:52:42 2022] NOTICE:  Forced_Hostname is being dynamically changed to "nginx-loadbalancer.localnet.com".
+
+
+Ad Let's encrypt cert
+certbot -d grw-srv-master.duckdns.org --manual --preferred-challenges dns certonly
+https://www.duckdns.org/update?domains=grw-srv-master&token=1f95e81d-d758-4fe0-bccd-9e6ef1908b32&txt=QoYpeCvZF3yf2IMRyWfp8BpTgw41kJnmQn1SqEyeicA
+
+cp /etc/letsencrypt/live/grw-srv-master.duckdns.org/fullchain.pem /home/gwos/gw8/
+cp /etc/letsencrypt/live/grw-srv-master.duckdns.org/privkey.pem /home/gwos/gw8/
+
+
+
+TAG=$(grep '^TAG=' .env | sed 's/^TAG=//')
+docker run --rm -t \
+    -v ${PWD}:/mnt \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --name gw8 groundworkdevelopment/gw8:${TAG} \
+    /src/docker_cmd.sh loadCertificates grw-srv-master.duckdns.org \
+    privkey.pem fullchain.pem 
+	
+wget https://support8.gwos.com/gw/gw8/files/latest/55509400/55509383/1/1649448841510/groundworkagent-2.7.1-127-linux-64-installer.run
+	
+
+
+
+docker run -d --rm --name gw8-upload -v dockergw8_ulg:/usr/local/groundwork/config alpine:3.11 sleep 600
+docker cp fullchain.pem gw8-upload:/usr/local/groundwork/config/cacerts/
+docker stop gw8-upload
