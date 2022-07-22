@@ -1,0 +1,4 @@
+Images management
+	- Remove all images: # docker image prune -a
+
+

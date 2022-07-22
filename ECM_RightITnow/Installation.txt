@@ -1,0 +1,9 @@
+Download trial version 6.1.1 for 45 day:
+	wget https://www.rightitnow.com/gatekeeper/download/rightitnow/c373a73fae6420f6771fe20ae57d2813e408/6.1.1/rightitnow.zip
+Unzip the package
+	unzip rightitnow.zip
+Start RightITnow ECM:
+	rightitnow/bin/catalina.sh start
+
+
+
